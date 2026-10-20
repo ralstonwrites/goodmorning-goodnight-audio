@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#100b10">
+  <meta name="description" content="GoodMorning/GoodNight: a five-song EP. Play the tracks in order with a custom, continuous music player.">
+  <title>GoodMorning/GoodNight | The EP</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f7eee8;
+      --quiet: #b8a7a9;
+      --muted: #82767b;
+      --amber: #f2a25e;
+      --hot: #f9c39c;
+      --violet: #af92ca;
+      --border: rgba(249, 198, 163, .14);
+      --background: #100b10;
+      --panel: #1c151b;
+      --panel2: #261b22;
+      --radius: 18px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 300px;
+      color: var(--ink);
+      line-height: 1.5;
+      background:
+        radial-gradient(ellipse at 11% -5%, rgba(184, 75, 21, .18), transparent 43%),
+        radial-gradient(ellipse at 90% 80%, rgba(78, 45, 95, .26), transparent 49%),
+        var(--background);
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; color: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--hot); outline-offset: 3px; }
+    [hidden] { display: none !important; }
+    .wrap { width: min(1140px, calc(100% - 48px)); margin-inline: auto; }
+    .masthead {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 15px; min-height: 70px; border-bottom: 1px solid var(--border);
+    }
+    .brand { font-size: .82rem; font-weight: 900; letter-spacing: .08em; text-decoration: none; color: var(--ink); }
+    .brand i { font-style: normal; color: var(--amber); }
+    .header-meta { font-size: .66rem; color: var(--quiet); text-transform: uppercase; letter-spacing: .24em; white-space: nowrap; }
+    .intro { margin: 48px 0 32px; }
+    .eyebrow { text-transform: uppercase; color: var(--amber); font-size: .7rem; letter-spacing: .28em; font-weight: 800; margin: 0 0 12px; }
+    h1 { margin: 0; font-weight: 900; font-size: clamp(2.4rem, 7.4vw, 5.6rem); letter-spacing: -.072em; line-height: 1.05; overflow-wrap: anywhere; }
+    h1 .slash { color: var(--amber); }
+    h1 .night { color: #e1c7d8; }
+    .lede { color: var(--quiet); max-width: 720px; font-size: .95rem; margin: 15px 0 0; }
+    .columns { display: grid; grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr); align-items: start; gap: 28px; }
+    .cover-card { background: #181015; border: 1px solid var(--border); padding: 10px; border-radius: var(--radius); box-shadow: 0 25px 70px rgba(0, 0, 0, .29); }
+    .album-art { width: 100%; height: auto; aspect-ratio: 4 / 5; object-fit: contain; display: block; border-radius: 9px; background: #29180e; }
+    .art-caption { color: var(--quiet); font-size: .75rem; line-height: 1.65; padding: 12px 4px; margin: 0; }
+    .right { min-width: 0; display: grid; gap: 20px; }
+    .panel { background: rgba(28, 21, 27, .94); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .player { padding: 25px; }
+    .player-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .micro { font-size: .66rem; color: var(--quiet); letter-spacing: .24em; text-transform: uppercase; font-weight: 800; }
+    .fire-dot { display: inline-block; height: 8px; width: 8px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 13px #f16e2b9c; margin-right: 10px; }
+    .fraction { font-size: .75rem; font-variant-numeric: tabular-nums; color: var(--quiet); }
+    .song-name { font-size: clamp(1.65rem, 3.6vw, 2.25rem); font-weight: 800; letter-spacing: -.05em; line-height: 1.15; margin: 0 0 7px; }
+    .sub { font-size: .8rem; color: var(--quiet); margin: 0; min-height: 2.7em; }
+    .wave { display: flex; align-items: end; gap: 4px; height: 54px; justify-content: space-between; margin-top: 19px; opacity: .8; overflow: hidden; }
+    .wave span { flex: 1; height: var(--h); background: linear-gradient(0deg, rgba(114, 69, 62, .5), rgba(248, 168, 108, .75)); border-radius: 2px; transform-origin: bottom center; }
+    .wave.is-playing span { animation: beat var(--speed) ease-in-out infinite alternate; }
+    @keyframes beat { to { transform: scaleY(.36); opacity: .52; } }
+    .times { display: flex; justify-content: space-between; font-size: .75rem; color: var(--quiet); font-variant-numeric: tabular-nums; margin: 13px 0 5px; }
+    input[type="range"] { display: block; width: 100%; accent-color: var(--amber); cursor: pointer; }
+    #seek { margin: 0; height: 19px; }
+    #seek:disabled { opacity: .38; cursor: not-allowed; }
+    .transport { display: flex; gap: 14px; justify-content: center; align-items: center; margin: 22px 0 16px; }
+    .round { border: 1px solid rgba(245, 183, 143, .22); border-radius: 50%; width: 49px; height: 49px; display: grid; place-items: center; font-size: 1.2rem; background: #2c2027; transition: background .12s; }
+    .round:hover:not(:disabled) { background: #443039; }
+    .round:disabled { opacity: .35; cursor: not-allowed; }
+    .main-play { height: 70px; width: 70px; font-size: 1.75rem; background: linear-gradient(145deg, #f5b174, #dc743c); border-color: transparent; color: #24100f; box-shadow: 0 4px 28px #e9743452; }
+    .main-play:hover:not(:disabled) { background: linear-gradient(145deg, #ffc38c, #ed8550); }
+    .settings-row { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 14px; }
+    .small-toggle { font-size: .73rem; font-weight: 700; letter-spacing: .02em; padding: 8px 10px; background: #241b23; border: 1px solid var(--border); border-radius: 8px; }
+    .small-toggle[aria-pressed="true"] { border-color: var(--amber); color: var(--hot); background: #35231d; }
+    .volume-group { display: flex; align-items: center; gap: 7px; }
+    .mute { border: 0; background: none; padding: 7px; font-size: 1rem; min-width: 35px; }
+    #volume { width: 96px; }
+    .status { margin: 17px 0 0; font-size: .75rem; color: var(--quiet); min-height: 1.5em; }
+    .status.error { color: #ffb0a5; }
+    .tracks-head { padding: 19px 23px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .tracks-head h2 { margin: 0; font-size: .85rem; text-transform: uppercase; letter-spacing: .17em; }
+    .tracks-head small { font-size: .67rem; letter-spacing: .07em; color: var(--quiet); }
+    .tracks { list-style: none; padding: 0; margin: 0; }
+    .tracks li + li { border-top: 1px solid rgba(245, 203, 172, .075); }
+    .track-button { width: 100%; padding: 17px 23px; display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 14px; align-items: center; color: var(--ink); border: 0; background: transparent; text-align: left; }
+    .track-button:hover { background: rgba(239, 175, 143, .055); }
+    .track-button[aria-current="true"] { background: linear-gradient(90deg, rgba(237, 127, 59, .18), rgba(74, 43, 53, .16)); box-shadow: inset 3px 0 0 var(--amber); }
+    .track-number { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .track-button[aria-current="true"] .track-number { color: var(--hot); }
+    .track-name { display: block; font-size: .9rem; font-weight: 750; overflow-wrap: anywhere; }
+    .track-detail { display: block; color: var(--quiet); font-size: .7rem; margin-top: 3px; }
+    .track-duration { color: var(--quiet); font-variant-numeric: tabular-nums; font-size: .78rem; }
+    footer { margin-top: 48px; padding: 25px 0 42px; border-top: 1px solid var(--border); color: var(--quiet); font-size: .74rem; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
+    @media (max-width: 790px) { .columns { grid-template-columns: 1fr; } .cover-column { max-width: 515px; margin-inline: auto; width: 100%; } .intro { margin-top: 35px; } }
+    @media (max-width: 480px) { .wrap { width: min(100% - 26px,1140px); } .header-meta { font-size: .56rem; letter-spacing: .12em; } .brand { font-size: .69rem; } .player { padding: 18px 15px; } .tracks-head, .track-button { padding-left: 15px; padding-right: 15px; } .track-button { grid-template-columns: 26px minmax(0,1fr) auto; gap: 8px; } }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *:before, *:after { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="masthead">
+      <a class="brand" href="#top">GOODMORNING<i>/</i>GOODNIGHT</a>
+      <span class="header-meta">THE EP &nbsp;/&nbsp; FIVE TRACKS</span>
+    </header>
+    <main id="top">
+      <section class="intro" aria-labelledby="ep-title">
+        <p class="eyebrow">A five-song EP</p>
+        <h1 id="ep-title">GoodMorning<span class="slash">/</span><span class="night">GoodNight</span></h1>
+        <p class="lede">Five songs. One story. Listen straight through or choose a track. The next song starts when the last one ends.</p>
+      </section>
+      <div class="columns">
+        <section class="cover-column" aria-label="EP cover artwork">
+          <div class="cover-card">
+            <img class="album-art" src="album-cover.webp" alt="GoodMorning/GoodNight EP cover: a scorched, cracked photo frame with two torn-out faces in front of burning curtains, under a metal-style title." width="980" height="1225">
+          </div>
+          <p class="art-caption">The flames are in the background. The music stays on this page.</p>
+        </section>
+        <section class="right" aria-label="Music player and EP tracklist">
+          <div class="panel player">
+            <div class="player-top">
+              <span class="micro"><span class="fire-dot" aria-hidden="true"></span><span id="play-state">Now selected</span></span>
+              <span id="counter" class="fraction">01 / 05</span>
+            </div>
+            <h2 id="current-title" class="song-name">Track 01</h2>
+            <p id="track-caption" class="sub">Selected track 1 of 5.</p>
+            <div id="wave" class="wave" aria-hidden="true"></div>
+            <div class="times"><span id="elapsed">0:00</span><span id="duration">--:--</span></div>
+            <label for="seek" style="position:absolute;left:-9999px;">Seek within song</label>
+            <input id="seek" type="range" min="0" max="1000" value="0" step="1" disabled aria-label="Seek within song">
+            <div class="transport">
+              <button id="previous" type="button" class="round" title="Previous track" aria-label="Previous track">&#x23EE;</button>
+              <button id="play" type="button" class="round main-play" title="Play" aria-label="Play">&#x25B6;</button>
+              <button id="next" type="button" class="round" title="Next track" aria-label="Next track">&#x23ED;</button>
+            </div>
+            <div class="settings-row">
+              <button id="repeat" type="button" class="small-toggle" aria-pressed="false" title="Repeat entire EP">Repeat EP: Off</button>
+              <div class="volume-group">
+                <button id="mute" type="button" class="mute" title="Mute/unmute" aria-label="Mute">&#x1F50A;</button>
+                <label for="volume" style="position:absolute;left:-9999px;">Volume</label>
+                <input id="volume" type="range" min="0" max="1" step="0.01" value="0.85" aria-label="Volume">
+              </div>
+            </div>
+            <p id="status" class="status" role="status" aria-live="polite">Ready. Press play to listen.</p>
+            <audio id="audio" preload="metadata"></audio>
+          </div>
+          <div class="panel">
+            <div class="tracks-head"><h2>Tracklist</h2><small>PLAY IN ORDER 01-05</small></div>
+            <ol id="track-list" class="tracks" aria-label="Tracks in EP order"></ol>
+          </div>
+        </section>
+      </div>
+    </main>
+    <footer><span>GoodMorning/GoodNight</span><span>Five songs. One EP.</span></footer>
+  </div>
+  <script>
+  "use strict";
+
+  // ================================================================
+  // CONFIGURATION: EDIT HERE WHEN THE REAL TRACK NAMES ARE READY.
+  // The 01.mp3 through 05.mp3 files go in the GitHub repo's /audio/ folder.
+  // Keep the track entries in their intended listening order.
+  // ================================================================
+  const REPOSITORY = "goodmorning-goodnight-audio";
+  const GITHUB_USERNAME = "YOUR-GITHUB-USERNAME"; // Needed for the Neocities copy only.
+  const TRACKS = [
+    { title: "Track 01", file: "01.mp3" },
+    { title: "Track 02", file: "02.mp3" },
+    { title: "Track 03", file: "03.mp3" },
+    { title: "Track 04", file: "04.mp3" },
+    { title: "Track 05", file: "05.mp3" }
+  ];
+  // ================================================================
+
+  const onGitHubPages = location.hostname.toLowerCase().endsWith(".github.io") &&
+    location.pathname.startsWith("/" + REPOSITORY + "/");
+  const baseURL = onGitHubPages ? "./audio/" :
+    "https://" + GITHUB_USERNAME + ".github.io/" + REPOSITORY + "/audio/";
+  const sourceFor = (track) => baseURL + encodeURIComponent(track.file);
+
+  const el = (id) => document.getElementById(id);
+  const audio = el("audio");
+  const list = el("track-list");
+  const playButton = el("play");
+  const previousButton = el("previous");
+  const nextButton = el("next");
+  const repeatButton = el("repeat");
+  const muteButton = el("mute");
+  const volumeInput = el("volume");
+  const seekInput = el("seek");
+  const status = el("status");
+  const knownDurations = new Array(TRACKS.length).fill(null);
+  let currentIndex = 0;
+  let repeatEP = false;
+  let userSeeking = false;
+
+  const fmt = (seconds) => {
+    if (!Number.isFinite(seconds) || seconds < 0) return "--:--";
+    const s = Math.floor(seconds);
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  };
+
+  function setStatus(message, error = false) {
+    status.textContent = message;
+    status.classList.toggle("error", error);
+  }
+
+  function renderList() {
+    list.replaceChildren();
+    TRACKS.forEach((track, index) => {
+      const li = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "track-button";
+      button.setAttribute("aria-current", String(index === currentIndex));
+      button.setAttribute("aria-label", "Play track " + (index + 1) + ": " + track.title);
+      const number = document.createElement("span");
+      number.className = "track-number";
+      number.textContent = String(index + 1).padStart(2, "0");
+      const details = document.createElement("span");
+      const name = document.createElement("span");
+      name.className = "track-name";
+      name.textContent = track.title;
+      const sub = document.createElement("span");
+      sub.className = "track-detail";
+      sub.textContent = index === currentIndex ? "SELECTED" : "GOODMORNING / GOODNIGHT";
+      details.append(name, sub);
+      const duration = document.createElement("span");
+      duration.className = "track-duration";
+      duration.textContent = fmt(knownDurations[index]);
+      button.append(number, details, duration);
+      button.addEventListener("click", () => selectTrack(index, true));
+      li.append(button);
+      list.append(li);
+    });
+  }
+
+  function updatePlayVisual() {
+    const playing = !audio.paused && !audio.ended;
+    playButton.innerHTML = playing ? "&#x23F8;" : "&#x25B6;";
+    playButton.setAttribute("aria-label", playing ? "Pause" : "Play");
+    playButton.title = playing ? "Pause" : "Play";
+    el("wave").classList.toggle("is-playing", playing);
+    el("play-state").textContent = playing ? "Now playing" : "Now selected";
+  }
+
+  function updateNav() {
+    previousButton.disabled = currentIndex === 0;
+    nextButton.disabled = currentIndex === TRACKS.length - 1 && !repeatEP;
+    el("counter").textContent = String(currentIndex + 1).padStart(2, "0") + " / " + String(TRACKS.length).padStart(2, "0");
+    el("current-title").textContent = TRACKS[currentIndex].title;
+    el("track-caption").textContent = "Track " + (currentIndex + 1) + " of " + TRACKS.length + ".";
+    if ("mediaSession" in navigator) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: TRACKS[currentIndex].title,
+          artist: "GoodMorning/GoodNight",
+          album: "GoodMorning/GoodNight",
+          artwork: [{ src: new URL("album-cover.webp", location.href).href, sizes: "980x1225", type: "image/webp" }]
+        });
+      } catch (_) { /* Media Session support is optional. */ }
+    }
+  }
+
+  function updateProgress() {
+    const duration = audio.duration;
+    el("elapsed").textContent = fmt(audio.currentTime || 0);
+    el("duration").textContent = fmt(duration);
+    const valid = Number.isFinite(duration) && duration > 0;
+    seekInput.disabled = !valid;
+    if (!userSeeking) seekInput.value = valid ? Math.round((audio.currentTime / duration) * 1000) : 0;
+  }
+
+  function selectTrack(index, autoplay) {
+    if (index < 0 || index >= TRACKS.length) return;
+    currentIndex = index;
+    audio.pause();
+    audio.src = sourceFor(TRACKS[index]);
+    audio.load();
+    userSeeking = false;
+    updateProgress();
+    updateNav();
+    renderList();
+    updatePlayVisual();
+    setStatus("Selected: " + TRACKS[index].title);
+    if (autoplay) attemptPlay();
+  }
+
+  async function attemptPlay() {
+    if (GITHUB_USERNAME === "YOUR-GITHUB-USERNAME" && !onGitHubPages) {
+      setStatus("Setup needed: replace YOUR-GITHUB-USERNAME in the HTML file.", true);
+      return;
+    }
+    try {
+      await audio.play();
+      setStatus("Playing: " + TRACKS[currentIndex].title);
+    } catch (_) {
+      if (audio.error) {
+        setStatus("Couldn't load " + TRACKS[currentIndex].file + ". Upload the MP3 to the GitHub audio folder and check its name.", true);
+      } else {
+        setStatus("Playback did not start. Press Play again to continue.", true);
+      }
+    }
+    updatePlayVisual();
+  }
+
+  playButton.addEventListener("click", () => {
+    if (audio.paused) attemptPlay();
+    else audio.pause();
+  });
+  previousButton.addEventListener("click", () => {
+    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    selectTrack(currentIndex - 1, !audio.paused);
+  });
+  nextButton.addEventListener("click", () => {
+    if (currentIndex < TRACKS.length - 1) selectTrack(currentIndex + 1, !audio.paused);
+    else if (repeatEP) selectTrack(0, !audio.paused);
+  });
+  repeatButton.addEventListener("click", () => {
+    repeatEP = !repeatEP;
+    repeatButton.setAttribute("aria-pressed", String(repeatEP));
+    repeatButton.textContent = "Repeat EP: " + (repeatEP ? "On" : "Off");
+    updateNav();
+  });
+  audio.addEventListener("ended", () => {
+    if (currentIndex < TRACKS.length - 1) selectTrack(currentIndex + 1, true);
+    else if (repeatEP) selectTrack(0, true);
+    else { setStatus("You've reached the end of GoodMorning/GoodNight."); updatePlayVisual(); }
+  });
+  audio.addEventListener("play", updatePlayVisual);
+  audio.addEventListener("pause", updatePlayVisual);
+  audio.addEventListener("timeupdate", updateProgress);
+  audio.addEventListener("durationchange", () => {
+    if (Number.isFinite(audio.duration)) knownDurations[currentIndex] = audio.duration;
+    updateProgress(); renderList();
+  });
+  audio.addEventListener("error", () => {
+    if (GITHUB_USERNAME === "YOUR-GITHUB-USERNAME" && !onGitHubPages) return;
+    setStatus("Couldn't load " + TRACKS[currentIndex].file + ". Check that the MP3 was uploaded and the URL is correct.", true);
+    updatePlayVisual();
+  });
+  seekInput.addEventListener("input", () => {
+    if (!Number.isFinite(audio.duration)) return;
+    userSeeking = true;
+    el("elapsed").textContent = fmt((Number(seekInput.value) / 1000) * audio.duration);
+  });
+  seekInput.addEventListener("change", () => {
+    if (Number.isFinite(audio.duration)) audio.currentTime = (Number(seekInput.value) / 1000) * audio.duration;
+    userSeeking = false;
+    updateProgress();
+  });
+  volumeInput.addEventListener("input", () => {
+    audio.volume = Number(volumeInput.value);
+    audio.muted = audio.volume === 0;
+    updateMute();
+    try { localStorage.setItem("gmgn-volume", String(audio.volume)); } catch (_) {}
+  });
+  function updateMute() {
+    muteButton.innerHTML = audio.muted || audio.volume === 0 ? "&#x1F507;" : "&#x1F50A;";
+    muteButton.setAttribute("aria-label", audio.muted ? "Unmute" : "Mute");
+  }
+  muteButton.addEventListener("click", () => { audio.muted = !audio.muted; updateMute(); });
+  audio.addEventListener("volumechange", updateMute);
+
+  // Shortcuts: Space = play/pause, arrow left/right = previous/next.
+  document.addEventListener("keydown", (event) => {
+    if (event.target.closest("button, input, textarea, select, a") || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.code === "Space") { event.preventDefault(); playButton.click(); }
+    else if (event.code === "ArrowRight") nextButton.click();
+    else if (event.code === "ArrowLeft") previousButton.click();
+  });
+
+  // Load duration metadata for all tracks without downloading every full song.
+  // Metadata may take a moment to appear. Playback never uses timers.
+  const inspectors = [];
+  function inspectDurations() {
+    TRACKS.forEach((track, index) => {
+      const probe = document.createElement("audio");
+      probe.preload = "metadata";
+      probe.addEventListener("loadedmetadata", () => {
+        if (Number.isFinite(probe.duration)) { knownDurations[index] = probe.duration; renderList(); }
+      }, { once: true });
+      probe.src = sourceFor(track);
+      inspectors.push(probe);
+    });
+  }
+
+  // The graphic is drawn with CSS bars, not an uploaded waveform.
+  const wave = el("wave");
+  for (let i = 0; i < 52; i++) {
+    const bar = document.createElement("span");
+    bar.style.setProperty("--h", (17 + ((i * 31 + i * i * 7) % 81)) + "%");
+    bar.style.setProperty("--speed", (0.35 + ((i * 11) % 14) / 20) + "s");
+    wave.append(bar);
+  }
+  try {
+    const saved = Number(localStorage.getItem("gmgn-volume"));
+    if (Number.isFinite(saved) && saved >= 0 && saved <= 1 && localStorage.getItem("gmgn-volume") !== null) {
+      audio.volume = saved; volumeInput.value = String(saved);
+    } else audio.volume = Number(volumeInput.value);
+  } catch (_) { audio.volume = Number(volumeInput.value); }
+  updateMute();
+  selectTrack(0, false);
+  if (onGitHubPages || GITHUB_USERNAME !== "YOUR-GITHUB-USERNAME") inspectDurations();
+  else setStatus("Setup needed: update GITHUB_USERNAME and upload your five MP3s.");
+  </script>
+</body>
+</html>
